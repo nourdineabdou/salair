@@ -63,6 +63,16 @@ return [
             ]) : [],
         ],
 
+        'oracle' => [
+            'driver'    => env('DB_CONNECTION_ORACLE'),
+            'host'      => env('DB_HOST_ORACLE'),
+            'port'      => env('DB_PORT_ORACLE'),
+            'database'  => env('DB_DATABASE_ORACLE'),
+            'username'  => env('DB_USERNAME_ORACLE'),
+            'service_name' =>env('DB_SERVICE_NAME_ORACLE'),
+            'password'  => env('DB_PASSWORD_ORACLE'),
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),

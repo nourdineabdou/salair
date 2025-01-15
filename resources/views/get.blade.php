@@ -22,7 +22,10 @@
                             <div class="text-left mt-1">
                                 <x-buttons.btn-save
                                     onclick="saveform(this ,  function(data){
-                                       window.open(racine+'download/'+data,'_blank')  } 
+                                       
+                                       window.open(racine+'download/'+data , '_blank');
+                                       //alert(racine+'download/'+data)
+                                       } 
                                        )"
                                     container="execution">
                                     Exécuter 

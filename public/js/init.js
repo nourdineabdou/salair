@@ -453,7 +453,9 @@ function saveform(element, aftersave = null) {
         processData: false,
         // dataType: 'json',
         success: function (data) {
-            //console.log(data.file);
+            console.log(data);
+            errorsHtml = '<ul class="list-group">';
+            errorsHtml += '<li class="list-group-item list-group-item-success"> Montant total '+(data.montant/100).toFixed(2)+'</li>';
             $('#' + container + ' .spinner-border').hide();
             $('#' + container + ' .answers-well-saved').show();
             $(element).removeAttr('disabled');
@@ -461,9 +463,23 @@ function saveform(element, aftersave = null) {
                 $('#' + container + ' .answers-well-saved').hide();
                 $('#' + container + ' .main-icon').show();
             }, 3500);
-            if (aftersave) {
-                aftersave(data.id);
+            if(data.status)
+            {
+                console.log('oui');
+                if (aftersave) {
+                    aftersave(data.id);
+                }
             }
+            else {
+                errorsHtml += '<li class="list-group-item list-group-item-danger">Listes des comptes non actifs</li>';
+                $.each(data.response, function ( key , value) {
+                    errorsHtml += '<li class="list-group-item list-group-item-danger">' + value + '</li>';
+                });
+                
+                $('#' + container + ' #form-errors').show().html(errorsHtml);
+
+            }
+            errorsHtml += '</ul>';  
             $('#' + container + ' .is-invalid').each(function(index,item){ $(item).removeClass('is-invalid'); });
             $('#' + container + ' .invalid-feedback').each(function(index,item){ $(item).remove(); });
             //window.location.href = data;
