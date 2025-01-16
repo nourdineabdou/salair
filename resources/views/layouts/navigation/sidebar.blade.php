@@ -7,8 +7,8 @@
                     Integration
                 </a>
                 <a class="nav-link" href="charts.html">
-                    <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
-                    Visualisation
+                    <div class="sb-nav-link-icon"><i class="fa fa-history"></i></div>
+                    Historique
                 </a>
                 <a class="nav-link" href="tables.html">
                     <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
