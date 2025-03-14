@@ -38,4 +38,9 @@
             </div>
         </div>
     </x-card>
+    <div class="row mt-1">
+        <div class="col-md-8" id="block-success">
+            
+        </div>
+    </div>
 </x-modal.modal-header-body>

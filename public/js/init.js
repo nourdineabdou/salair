@@ -55,8 +55,17 @@ function openInModal(link, aftersave = null, modal = "main" , largeModal = "sm")
     });
 }
 
+
+// 
+
+function refresh(link , link2){
+    getTheContent('refrech/delta' , "#tbody-salut")
+    window.open(link2,"_blank")
+}
 // Get the content from Ajax and show it in a div
 function getTheContent(link, container) {
+    let loading_content = '<div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>';
+
     $(container).html(loading_content);
     $.ajax({
         type: 'get',
@@ -463,20 +472,19 @@ function saveform(element, aftersave = null) {
                 $('#' + container + ' .answers-well-saved').hide();
                 $('#' + container + ' .main-icon').show();
             }, 3500);
-            if(data.status)
+            console.log()
+            if( typeof data === 'object' && ('status' in data) && data.status===false )
             {
-                console.log('oui');
-                if (aftersave) {
-                    aftersave(data.id);
-                }
-            }
-            else {
                 errorsHtml += '<li class="list-group-item list-group-item-danger">Listes des comptes non actifs</li>';
                 $.each(data.response, function ( key , value) {
                     errorsHtml += '<li class="list-group-item list-group-item-danger">' + value + '</li>';
                 });
-                
                 $('#' + container + ' #form-errors').show().html(errorsHtml);
+                
+            }
+            else {
+                console.log('entrer')
+                $("#block-success").html(data);
 
             }
             errorsHtml += '</ul>';  

@@ -17,12 +17,16 @@ use App\Http\Controllers\UserController;
 */
 Route::get('refrech_copmptes',[SalaireController::class,'save_comptes']);
 Route::group(['middleware' => 'auth'], function (){
-    Route::get('/', function () {
-        return view('index');
-    })->name('home');
+
+
+   
+    Route::get('/', [SalaireController::class, 'index'])->name('home');
+    Route::get('/refrech/delta', [SalaireController::class, 'refrech_data'])->name('refrech');
     Route::get('get/{id?}', [SalaireController::class, 'get']);
     Route::post('chercher',[SalaireController::class,'store']);
-    Route::get('download/{id}',[SalaireController::class,'dowload_file']);
+    Route::get('download/{id}',[SalaireController::class,'dowload_file'])->name('download');
+    Route::get('thisDay',[SalaireController::class,'historiques'])->name('historique');
+    Route::get('historique',[SalaireController::class,'tous'])->name('tous');
     
     //Route::get('req/{id?}',[SalaireController::class,'get_formation_compte']);
 });

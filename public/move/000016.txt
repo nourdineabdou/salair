@@ -1,25 +1,25 @@
-1        211124MAURITEL                            000130620601009700113     8100009600000000000'13288400'VIREMENT EN FAV PERSONNEL MAUR      929
-2             A                                   ABM                     000130619820233400188     070000000000001181400VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000007808     480000000000000135000VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000026093     950000000000000409000VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130620590000015193     010000000000000619800VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130620790000016237     400000000000000095000VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000010413     900000000000000255000VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000023317     810000000000000059800VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130620790000016435     280000000000000044200VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000007719     240000000000000044200VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130620790000054086     800000000000000335000VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130620290000062933     950000000000000539800VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000033453     340000000000000255000VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619820006300102     070000000000000276200VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000069332     670000000000000094800VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000067108     460000000000000091200VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130621690000128182     780000000000000119800VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000024117     090000000000002951400VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130621490000056908     450000000000000059800VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000009721     320000000000004281400VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000014661     530000000000000059800VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130619890000033421     330000000000000489000VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130621890000083070     690000000000000291200VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130622090000274780     220000000000000269200VIREMENT  SALAIRE mauritel
-2             A                                   ABM                     000130620090000097045     270000000000000331400VIREMENT  SALAIRE mauritel
+1        080125MAURITEL                            000130620601009700113     8100002800000000000013288400VIREMENT EN FAV PERSONNEL MAUR      929
+2            A                                   ABM                     000130619820233400188     0700000000000001181400VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000007808     4800000000000000135000VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000026093     9500000000000000409000VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130620590000015193     0100000000000000619800VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130620790000016237     4000000000000000095000VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000010413     9000000000000000255000VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000023317     8100000000000000059800VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130620790000016435     2800000000000000044200VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000007719     2400000000000000044200VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130620790000054086     8000000000000000335000VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130620290000062933     9500000000000000539800VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000033453     3400000000000000255000VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619820006300102     0700000000000000276200VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000069332     6700000000000000094800VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000067108     4600000000000000091200VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130621690000128182     7800000000000000119800VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000024117     0900000000000002951400VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130621490000056908     4500000000000000059800VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000009721     3200000000000004281400VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000014661     5300000000000000059800VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130619890000033421     3300000000000000489000VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130621890000083070     6900000000000000291200VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130622090000274780     2200000000000000269200VIREMENTSALAIRE mauritel
+2            A                                   ABM                     000130620090000097045     2700000000000000331400VIREMENTSALAIRE mauritel

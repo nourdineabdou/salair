@@ -2,21 +2,21 @@
     <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
         <div class="sb-sidenav-menu">
             <div class="nav">
-                <a class="nav-link" href="index.html">
-                    <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                    Integration
+                <a class="nav-link" href="{{route('home')}}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-list"></i></div>
+                    Listes des intégrations
                 </a>
-                <a class="nav-link" href="charts.html">
-                    <div class="sb-nav-link-icon"><i class="fa fa-history"></i></div>
-                    Historique
+                <a class="nav-link" href="{{route('home')}}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-list"></i></div>
+                    Listes des intégrations
                 </a>
-                <a class="nav-link" href="tables.html">
-                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                    Rubrique
+                <a class="nav-link" href="{{route('historique')}}">
+                    <div class="sb-nav-link-icon"><i class="fa fa-calendar"></i></div>
+                        Historique 
                 </a>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
-                    Matricul
+                        Gestion matricule 
                     <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                 </a>
                 <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">

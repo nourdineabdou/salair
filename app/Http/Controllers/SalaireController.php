@@ -7,17 +7,27 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use  App\Models\ReglesSalaire;
 use  App\Models\Compte;
+use  App\Models\Historique;
 //use Illuminate\Support\Facades\File;
 use File;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use DB;
-//use GuzzleHttp\Psr7\Request;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class SalaireController extends Controller
 {
 
-    
+    public function index(){
+        $historiques = Historique::where("date" , Carbon::now()->format('Y-m-d'))->get();
+        return view('index' , ['histo_this_days'=>$historiques]);
+    }
+    public function refrech_data(){
+        $historiques = Historique::where("date" , Carbon::now()->format('Y-m-d'))->get();
+
+        return view('ajax.ligne' , ['histo_this_days'=>$historiques]);
+    }
     public function get($id = 1)
     {
         $regle = ReglesSalaire::find($id);
@@ -39,8 +49,16 @@ class SalaireController extends Controller
       for ($i=1; $i <$rest ; $i++) {
            $zeoro .='0';
       }
-
-      return $zeoro.trim($salaire.'');
+       $nbtotal = strlen($zeoro.trim($salaire.''));
+       if($nbtotal == 20)
+            return $zeoro.trim($salaire.'');
+        elseif($nbtotal <20)
+             {
+                for ($i=1; $i <=20-$nbtotal ; $i++) {
+                    $zeoro .='0';
+               }
+                return $zeoro.trim($salaire.'');
+             }
     }
 
     public function store(Request $request)
@@ -56,8 +74,25 @@ class SalaireController extends Controller
         $res = $response[0];
         if($res->count()){
             return response()->json(["id"=>0,'response'=>$res->toArray() , 'montant' =>$response[1] , 'status'=>false]);
-        }else
-         return response()->json(["id"=>$regle->id ,'response'=>$res->toArray() , 'montant' =>$response[1] , 'status'=>true]);
+        }else{
+            $histo =  new Historique;
+            $histo->date = Carbon::now()->format('Y-m-d');
+            $histo->user_id = Auth::user()->id;
+            $histo->regles_salaire_id = $regle->id;
+            $histo->montant_Total = $response[1];
+            $histo->nbres_lignes = $response[2];
+            $file = $request->file('fichier');
+            
+            $histo->save();
+            $fileID = 'fichier-'.$histo->id.'.' . $file->getClientOriginalExtension();
+            $file->move(public_path('assets/file'), $fileID);
+            $histo->path_file = 'assets/files/'.$fileID;
+            $histo->save();
+
+            return view('success' , [ "route"=>route('download' , $regle->id) ,  'montant'=> $response[1] , 'regles'=>$regle ,  'lignes'=>$response[2]] );
+            //return response()->json(["id"=>$regle->id ,'response'=>$res->toArray() , 'montant' =>$response[1] , 'status'=>true]);
+
+        }
            
     }
 
@@ -65,6 +100,33 @@ class SalaireController extends Controller
         $regle = ReglesSalaire::find($id);
         return response()->download(public_path('move/'.$regle->name_file. '.txt'));
     }
+
+    public function historiques(){
+        $historiques = Historique::where("date" , Carbon::now()->format('Y-m-d'))->get();
+        return view('this_day',["historiques"=>$historiques , "date"=>Carbon::now()->format('Y-m-d')]);
+
+    }
+
+
+    public function read_text($path){
+
+        try {
+            
+            $file = storage_path($path);  // Spécifiez le chemin du fichier
+            
+            $lines = File::get($file);  // Récupère tout le contenu du fichier
+
+            // Diviser le contenu en lignes
+            $lines = explode(PHP_EOL, $lines);
+
+            return $lines;
+        } catch (\Throwable $th) {
+            return null;
+        }
+
+        
+    }
+
 
     // public function  api(){
        
@@ -85,7 +147,7 @@ class SalaireController extends Controller
     //     echo $res->getBody();
     // }
 
-    public function get_montant ($path , $regle){
+    public function get_montant($path , $regle){
         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
          $spreadsheet = $reader->load($path);
         // $last_th = null;:
@@ -95,17 +157,16 @@ class SalaireController extends Controller
         $i = 0;
         $montant = 0;
         $debutFile = false;
-        $debut_trans = true;
-        $ligne = '';
+        //$ligne = '';
         //$ligne .='1';
-        $ligne .=$regle->entete;
-        
+       // $ligne .=$regle->entete;
+        $j = 0;
         foreach ($worksheet->getRowIterator() as $row) {
             $cellIterator = $row->getCellIterator();
             $cellIterator->setIterateOnlyExistingCells(false);
             
             $r = '';
-            $i = 0;
+            $i= 0;
             foreach ($cellIterator as $cell) {
                 if($i == 0) $r .= $cell->getCalculatedValue();
                 else $r .=';'.$cell->getCalculatedValue();
@@ -114,43 +175,45 @@ class SalaireController extends Controller
             
             $ligne = '';
             $chaine = explode(';' , $r);
-            if(isset($chaine[0])  && trim($chaine[0]) === trim($ordre[0])){
+            if( $debutFile ==false &&  isset($chaine[0])  && trim($chaine[0]) === trim($ordre[0])){
                 $debutFile = true;
+                //dd($chaine[$regle->montant]);
             }
             elseif( $debutFile == true && $chaine[0] != '' )  {
                 //dd($chaine[$regle->montant]);
                 $montant += $chaine[$regle->montant];
+                $j++;
             }
                
         }
-        return $montant*100;
+        //dd([$montant*100 , $j]);
+        return  [$montant*100 , $j] ;
     }
     public function salaire_rim($path , $regle){
         $data = collect();
-        //$path_dest = 'C:\Users\Administrateur\Desktop\\veth\\'.$regle->name_file. '.txt';
-        //dd($path_dest);
         $path_dest = public_path("move/".$regle->name_file. '.txt');
-        //dd($regle);
         $espace = explode(',',$regle->nbespace);
         $ordre = explode(',',$regle->ordre);
-         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
-         $spreadsheet = $reader->load($path);
-        // $last_th = null;:
-         $worksheet = $spreadsheet->getActiveSheet();
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $spreadsheet = $reader->load($path);
+        $worksheet = $spreadsheet->getActiveSheet();
         $i = 0;
         $debutFile = false;
         $debut_trans = true;
-        $ligne = '';
-        //$ligne .='1';
-        $montant = $this->get_montant($path , $regle);
-        $ligne .=  str_replace("montant", "'".$montant."'", $regle->entete) ;
+        //$rows = '';
+        $ligne ='';
+        $d = $this->get_montant($path , $regle);
+        $montant =$d[0]; 
+        $rows =$d[1];
+        $mont = trim($regle->cle_entete).$this->get_0($montant); 
+        $ligne =  str_replace("montant", $mont, $regle->entete) ;
+        $ligne =  str_replace("date", Carbon::now()->format('dmy'), $ligne) ;
         File::put($path_dest, $ligne."\n");          
         $error = false;
         $data_compte = Collect();
         foreach ($worksheet->getRowIterator() as $row) {
             $cellIterator = $row->getCellIterator();
             $cellIterator->setIterateOnlyExistingCells(false);
-            
             $r = '';
             $i = 0;
             foreach ($cellIterator as $cell) {
@@ -169,13 +232,13 @@ class SalaireController extends Controller
                 //$this->get_formation_compte($chaine[$regle->compte]);
                 if($detaillCompte  && !$error){
                     $dtcomp = '00013'.$detaillCompte->age.$detaillCompte->ncp;
-                    //dd();
-                    $ligne ='2'.$this->get_sapce($espace[0]);
-                    $ligne .="A".$this->get_sapce($espace[1] - strlen("A"));
-                    $ligne .='ABM'.$this->get_sapce($espace[2]- strlen('ABM'));
+                    //dd($espace[0]);
+                    $ligne ='2'.$this->get_sapce( (int) $espace[0] -strlen("2") );
+                    $ligne .="A".$this->get_sapce( (int) $espace[1] - strlen("A"));
+                    $ligne .='ABM'.$this->get_sapce( (int) $espace[2]- strlen('ABM'));
                     $ligne .=trim($dtcomp).$this->get_sapce($espace[3]- strlen(trim($dtcomp)));
-                    $sl = trim($detaillCompte->clc).$this->get_0($chaine[$regle->montant]*100).'VIREMENT';
-                    $ligne .=$sl.$this->get_sapce($espace[4]- strlen($sl));
+                    $sl = trim($detaillCompte->clc).$this->get_0( (int) $chaine[$regle->montant]*100).'VIREMENT';
+                    $ligne .=$sl.$this->get_sapce( (int) $espace[4]- strlen($sl));
                     $ligne .=$regle->nom_virement;
                     File::append($path_dest, $ligne."\n");
                 }
@@ -183,7 +246,6 @@ class SalaireController extends Controller
                     $error = true;
                     if(!$detaillCompte){
                         $data_compte->push($chaine[$regle->compte]);
-
                     }
 
                 }
@@ -192,7 +254,7 @@ class SalaireController extends Controller
             $i++;   
         }
 
-        return  [$data_compte , $montant]  ;
+        return  [$data_compte , $montant , $rows]  ;
         
         //File::move($path_dest, public_path("move/".$regle->name_file. '.txt'));
         
@@ -206,7 +268,6 @@ class SalaireController extends Controller
     }
 
     public function save_comptes(){
-
         ini_set('max_execution_time', 9000);
         $req = DB::connection('oracle')->select($this->bkcom);
         Compte::query()->delete();
