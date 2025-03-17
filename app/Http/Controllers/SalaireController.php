@@ -8,6 +8,7 @@ use Yajra\DataTables\DataTables;
 use  App\Models\ReglesSalaire;
 use  App\Models\Compte;
 use  App\Models\Historique;
+use  App\Models\Matricule;
 //use Illuminate\Support\Facades\File;
 use File;
 use GuzzleHttp\Client;
@@ -20,12 +21,12 @@ class SalaireController extends Controller
 {
 
     public function index(){
+        
         $historiques = Historique::where("date" , Carbon::now()->format('Y-m-d'))->get();
         return view('index' , ['histo_this_days'=>$historiques]);
     }
     public function refrech_data(){
         $historiques = Historique::where("date" , Carbon::now()->format('Y-m-d'))->get();
-
         return view('ajax.ligne' , ['histo_this_days'=>$historiques]);
     }
     public function get($id = 1)
@@ -61,6 +62,20 @@ class SalaireController extends Controller
              }
     }
 
+    public function snimBanque($path = "S:\Organisation&Informatique\Projets\jobs virements de masse\\fichiers valides\SNIM2.0\snimsalaire.txt"){
+        //dd($path);
+        $lines = $this->read_text($path);
+        if($lines == null)
+            return  "le fichier selectionnne ne contient pas d'information";
+        else{
+            foreach ($lines as $key => $ligne) {
+                   $matricule =   substr($ligne, 0, 8);
+                   $compte = Matricule::where();
+                echo $ligne ."<br>";
+            }
+        }
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -70,7 +85,7 @@ class SalaireController extends Controller
         //$path_dest = "C:\Users\Administrateur\Desktop\\veth\mauri.txt"; 
         $regle = ReglesSalaire::find($request->id);
        
-         $response=   $this->salaire_rim($request->file('fichier')->path() , $regle);
+        $response=   $this->salaire_rim($request->file('fichier')->path() , $regle);
         $res = $response[0];
         if($res->count()){
             return response()->json(["id"=>0,'response'=>$res->toArray() , 'montant' =>$response[1] , 'status'=>false]);
@@ -109,21 +124,13 @@ class SalaireController extends Controller
 
 
     public function read_text($path){
-
-        try {
             
-            $file = storage_path($path);  // Spécifiez le chemin du fichier
-            
-            $lines = File::get($file);  // Récupère tout le contenu du fichier
-
+            $lines = File::lines($path);  // Spécifiez le chemin du fichier
+            //dd($path);
+            //$lines = File::get($file);  // Récupère tout le contenu du fichier
             // Diviser le contenu en lignes
-            $lines = explode(PHP_EOL, $lines);
-
+            //$lines = explode(PHP_EOL, $lines);
             return $lines;
-        } catch (\Throwable $th) {
-            return null;
-        }
-
         
     }
 
@@ -281,6 +288,43 @@ class SalaireController extends Controller
         }
        //ompte::insert($req->toArray());
        
+    }
+
+
+    public function save_matricules($path= "S:\Organisation&Informatique\Projets\jobs virements de masse\\fichiers valides\SNIM2.0\snimmatricule.xlsx"){
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+         $spreadsheet = $reader->load($path);
+         $worksheet = $spreadsheet->getActiveSheet();
+         $debutFile = false;
+         foreach ($worksheet->getRowIterator() as $row) {
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(false);
+            $r = '';
+            $i= 0;
+             
+            foreach ($cellIterator as $cell) {
+                if($i == 0) $r .= $cell->getCalculatedValue();
+                else $r .=';'.$cell->getCalculatedValue();
+                $i++;
+            }
+            
+            $ligne = '';
+            $chaine = explode(';' , $r);
+            //dd($chaine);
+            if($debutFile == false &&  isset($chaine[0])  && trim($chaine[0]) === "Agence"){
+                $debutFile = true;
+                //dd($chaine[0]);
+            }
+            elseif($debutFile)    {
+                //dd($debutFile);
+                $matricule = new Matricule();
+                $matricule->regles_salaire_id = 6;
+                $matricule->matricule = trim($chaine[2]) ;
+                $matricule->compte = trim($chaine[3]) ;
+                $matricule->save();   
+            }      
+        }
+        return "les matricules sont enrigistres";
     }
 
     private $requete = "select unique rpad('00013'||trim(a.age)||trim(a.ncp),26,' ') as dtcom, clc from prod.bkcom a where a.cfe='N' and a.ife='N' and a.ncp in (compte)";
