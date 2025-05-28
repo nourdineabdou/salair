@@ -16,7 +16,7 @@ use GuzzleHttp\Exception\RequestException;
 use DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-
+use SplFileObject;
 class SalaireController extends Controller
 {
 
@@ -62,19 +62,61 @@ class SalaireController extends Controller
              }
     }
 
-    public function snimBanque($path = "S:\Organisation&Informatique\Projets\jobs virements de masse\\fichiers valides\SNIM2.0\snimsalaire.txt"){
-        //dd($path);
+    public function snimBanque($path , $regle){
         $lines = $this->read_text($path);
+        $error = false;
+        $data_compte = collect();
+        $pos = [22,10];
+        if($regle->postions) $pos =  explode("," ,$regle->postions);
+        $resultat = $this->get_montant_txt($path , $pos[0] , $pos[1] );
+        $montant = $resultat[0]; 
+        $rows = $resultat[1];
+        //$regle = ReglesSalaire::find(6);
+        $espace = explode(',',$regle->nbespace);
+        $ordre = explode(',',$regle->ordre);
+        $path_dest = public_path("move/".$regle->name_file. '.txt');
+        //$path_dest = "C:\Users\848295\Desktop\\exel_file\\".$regle->name_file. '.txt';
+        
         if($lines == null)
             return  "le fichier selectionnne ne contient pas d'information";
         else{
+            $mont = trim($regle->cle_entete).$this->get_0($montant); 
+            $tete =  str_replace("montant", $mont, $regle->entete) ;
+            $tete =  str_replace("date", Carbon::now()->format('dmy'), $tete) ;
+            File::put($path_dest, $tete."\n");
+            $detaillCompte = null;
             foreach ($lines as $key => $ligne) {
-                   $matricule =   substr($ligne, 0, 8);
-                   $compte = Matricule::where();
-                echo $ligne ."<br>";
+                    $ecrire = "";
+                    $ligne = $this->suprimerBOM($ligne);
+                    $matricule =   substr($ligne, 0, 8);
+                    $compte = Matricule::where('matricule',trim($matricule))->first();      
+                        if($compte && !$error){
+                            $detaillCompte = Compte::where( 'ncp'  , $compte->compte)->first();
+                            $dtcomp = '00013'.$detaillCompte->age.$detaillCompte->ncp;
+                            $ecrire ='2'.$this->get_sapce( (int) $espace[0] -strlen("2") );
+                            $ecrire .="A".$this->get_sapce( (int) $espace[1] - strlen("A"));
+                            $ecrire .='ABM'.$this->get_sapce( (int) $espace[2]- strlen('ABM'));
+                            $ecrire .=trim($dtcomp).$this->get_sapce($espace[3]- strlen(trim($dtcomp)));
+                            $sl = trim($detaillCompte->clc).$this->get_0( (int) substr($ligne , $pos[0] , $pos[1]) ).'VIREMENT';
+                            $ecrire .=$sl.$this->get_sapce( (int) $espace[4]- strlen($sl));
+                            $ecrire .=$regle->nom_virement;
+                            File::append($path_dest, $ecrire."\n");
+                        }
+                        else{
+                            $error = true;
+                            if(!$detaillCompte){
+                                $data_compte->push($compte ? $compte->compte : $matricule);
+                            }
+                        }
             }
         }
+        //dd($data_compte);
+        return  [$data_compte , $montant , $rows]  ;
     }
+
+    // public function get_montant($ligne){
+    //     $tab = substr($ligne , 22 , 11);
+    // }
 
     public function store(Request $request)
     {
@@ -84,9 +126,16 @@ class SalaireController extends Controller
          ["fichier.required"=>"Assurez-vous de spécifier un fichier"]);
         //$path_dest = "C:\Users\Administrateur\Desktop\\veth\mauri.txt"; 
         $regle = ReglesSalaire::find($request->id);
-       
-        $response=   $this->salaire_rim($request->file('fichier')->path() , $regle);
+       if($regle->extension == 'xlsx')
+            $response=   $this->salaire_rim($request->file('fichier')->path() , $regle);
+        else{
+            //dd(1);
+            $response=   $this->snimBanque($request->file('fichier')->path() , $regle);
+
+        }
+
         $res = $response[0];
+
         if($res->count()){
             return response()->json(["id"=>0,'response'=>$res->toArray() , 'montant' =>$response[1] , 'status'=>false]);
         }else{
@@ -97,7 +146,7 @@ class SalaireController extends Controller
             $histo->montant_Total = $response[1];
             $histo->nbres_lignes = $response[2];
             $file = $request->file('fichier');
-            
+
             $histo->save();
             $fileID = 'fichier-'.$histo->id.'.' . $file->getClientOriginalExtension();
             $file->move(public_path('assets/file'), $fileID);
@@ -119,19 +168,27 @@ class SalaireController extends Controller
     public function historiques(){
         $historiques = Historique::where("date" , Carbon::now()->format('Y-m-d'))->get();
         return view('this_day',["historiques"=>$historiques , "date"=>Carbon::now()->format('Y-m-d')]);
-
     }
 
 
-    public function read_text($path){
+    public function read_text($path = "S:\Organisation&Informatique\Projets\jobs virements de masse\\fichiers valides\SNIM2.0\snimsalaire.txt"){
             
-            $lines = File::lines($path);  // Spécifiez le chemin du fichier
-            //dd($path);
-            //$lines = File::get($file);  // Récupère tout le contenu du fichier
-            // Diviser le contenu en lignes
-            //$lines = explode(PHP_EOL, $lines);
-            return $lines;
+           // Crée un objet SplFileObject pour le fichier spécifié
+            $file = new SplFileObject($path);
+            // Active la lecture ligne par ligne
+            $file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY);
+            return $file;
         
+    }
+
+    public function suprimerBOM($line){
+        if (substr($line, 0, 3) === "\xEF\xBB\xBF")
+            // Si le BOM est présent, on le supprime
+               $phraseSansBOM = substr($line, 3); // Supprime les 3 premiers caractères (BOM)
+       else 
+           $phraseSansBOM = $line;
+       return $phraseSansBOM;
+
     }
 
 
@@ -171,7 +228,6 @@ class SalaireController extends Controller
         foreach ($worksheet->getRowIterator() as $row) {
             $cellIterator = $row->getCellIterator();
             $cellIterator->setIterateOnlyExistingCells(false);
-            
             $r = '';
             $i= 0;
             foreach ($cellIterator as $cell) {
@@ -196,6 +252,23 @@ class SalaireController extends Controller
         //dd([$montant*100 , $j]);
         return  [$montant*100 , $j] ;
     }
+
+    // extraire le montant pour un fichier txt
+
+    public function  get_montant_txt($path , $pos = 22 , $nb = 10){
+        $file = new SplFileObject($path);
+        // Active la lecture ligne par ligne
+        $file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY);
+        //return $file;
+          $montant = 0;
+          $nb = 0;
+        foreach ($file as $key => $ligne) {
+            $ligne = $this->suprimerBOM($ligne);
+            $montant += (double) substr($ligne , $pos , $nb);
+            $nb++;
+        }
+        return [$montant , $nb];
+    }
     public function salaire_rim($path , $regle){
         $data = collect();
         $path_dest = public_path("move/".$regle->name_file. '.txt');
@@ -207,7 +280,6 @@ class SalaireController extends Controller
         $i = 0;
         $debutFile = false;
         $debut_trans = true;
-        //$rows = '';
         $ligne ='';
         $d = $this->get_montant($path , $regle);
         $montant =$d[0]; 
@@ -235,7 +307,14 @@ class SalaireController extends Controller
                 $debutFile = true;
             }
             elseif( $debutFile == true && $chaine[0] != '' )  {
-                $detaillCompte = Compte::where( 'ncp'  , $chaine[$regle->compte])->first();
+                $detaillCompte = null;
+                if(Matricule::where('regles_salaire_id' ,$regle->id )->first() ){
+                   $matricule =  Matricule::where('matricule' , trim($chaine[$regle->matricule]))->first();
+                   if($matricule) $detaillCompte = Compte::where( 'ncp'  ,$matricule->compte)->first();
+                    else  $error= true; 
+                }else {
+                    $detaillCompte = Compte::where( 'ncp'  , $chaine[$regle->compte])->first();
+                }
                 //$this->get_formation_compte($chaine[$regle->compte]);
                 if($detaillCompte  && !$error){
                     $dtcomp = '00013'.$detaillCompte->age.$detaillCompte->ncp;
@@ -251,7 +330,10 @@ class SalaireController extends Controller
                 }
                 else{
                     $error = true;
-                    if(!$detaillCompte){
+                    if(Matricule::where('regles_salaire_id' ,$regle->id )->first() && !$matricule){
+                        $data_compte->push(trim($chaine[$regle->matricule]));
+                    }
+                    elseif(!$detaillCompte){
                         $data_compte->push($chaine[$regle->compte]);
                     }
 
@@ -287,11 +369,10 @@ class SalaireController extends Controller
            $cmp->save();
         }
        //ompte::insert($req->toArray());
-       
     }
 
 
-    public function save_matricules($path= "S:\Organisation&Informatique\Projets\jobs virements de masse\\fichiers valides\SNIM2.0\snimmatricule.xlsx"){
+    public function save_matricules($path= "S:\Organisation&Informatique\Projets\jobs virements de masse\\fichiers valides\FONCTION PUBLIQUE2.0 - Copie\\fpmatricule.xlsx"){
         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
          $spreadsheet = $reader->load($path);
          $worksheet = $spreadsheet->getActiveSheet();
@@ -301,7 +382,6 @@ class SalaireController extends Controller
             $cellIterator->setIterateOnlyExistingCells(false);
             $r = '';
             $i= 0;
-             
             foreach ($cellIterator as $cell) {
                 if($i == 0) $r .= $cell->getCalculatedValue();
                 else $r .=';'.$cell->getCalculatedValue();
@@ -316,9 +396,8 @@ class SalaireController extends Controller
                 //dd($chaine[0]);
             }
             elseif($debutFile)    {
-                //dd($debutFile);
                 $matricule = new Matricule();
-                $matricule->regles_salaire_id = 6;
+                $matricule->regles_salaire_id = 10;
                 $matricule->matricule = trim($chaine[2]) ;
                 $matricule->compte = trim($chaine[3]) ;
                 $matricule->save();   
@@ -328,10 +407,5 @@ class SalaireController extends Controller
     }
 
     private $requete = "select unique rpad('00013'||trim(a.age)||trim(a.ncp),26,' ') as dtcom, clc from prod.bkcom a where a.cfe='N' and a.ife='N' and a.ncp in (compte)";
-    private $bkcom = "select unique a.age ,  a.ncp,  a.clc from prod.bkcom a where (a.cfe='N' and a.ife='N' and a.cpro in ('001','002','003','011','012','013','014','021','024') and dev='929') or ncp = '90000001467'" ;
-
-   
-   
-
-   
+    private $bkcom = "select unique a.age ,  a.ncp,  a.clc from prod.bkcom a where (a.cfe='N' and a.ife='N' and a.cpro in ('001','002','003','011','012','013','014','021','024') and dev='929') or ncp = '90000001467'" ;  
 }

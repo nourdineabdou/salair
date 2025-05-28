@@ -15,7 +15,7 @@ use App\Http\Controllers\UserController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-Route::get('refrech_copmptes',[SalaireController::class,'snimBanque']);
+Route::get('refrech_copmptes',[SalaireController::class,'save_matricules']);
 Route::group(['middleware' => 'auth'], function (){
 
 
